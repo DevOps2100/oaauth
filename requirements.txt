@@ -4,3 +4,4 @@ mysqlclient==2.2.4
 crypto
 django-cors-headers
 django-shortuuidfield
+pytest
