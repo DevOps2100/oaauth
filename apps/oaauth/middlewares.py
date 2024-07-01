@@ -18,16 +18,19 @@ OaUser = get_user_model()
 class LoginCheckMiddleware(MiddlewareMixin):
     keyword = "JWT"
 
+    # 登录跳过鉴权白名单 可持续添加
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.white_list = ['/auth/login',]
+
     def process_view(self, request, view_func, view_args, view_kwargs):
         # 1 返回None 那么就会正常执行后续代码
         # 2 返回HttpResponse对象，讲不会执行视图，已经后续中间加代码
 
         # 将登录接口排除 不进行jwt鉴权
-        if request.path == '/auth/login':
-            print("中间件执行")
+        if request.path in self.white_list:
             request.user = AnonymousUser()
             request.auth = None
-            print("中间件执行")
             return None
 
         try:

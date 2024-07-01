@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import OaUser, UserStatusChoices,OADepartment
+from rest_framework import exceptions
 
 
 
@@ -42,3 +43,24 @@ class UserSerializer(serializers.ModelSerializer):
         # fields = "__all__"
         # 排除字段
         exclude = ['password','groups','user_permissions']
+
+
+# 重置密码序列化
+class ResetPwdSerializer(serializers.Serializer):
+    oldpwd = serializers.CharField(min_length=6, max_length=20)
+    pwd1 = serializers.CharField(min_length=6, max_length=20)
+    pwd2 = serializers.CharField(min_length=6, max_length=20)
+
+    def validate(self, attrs):
+        oldpwd = attrs['oldpwd']
+        pwd1 = attrs['pwd1']
+        pwd2 = attrs['pwd2']
+
+        user = self.context['request'].user
+        if not user.check_password(oldpwd):
+            raise exceptions.ValidationError("旧密码错误！")
+
+        if pwd1 != pwd2:
+            raise exceptions.ValidationError("两个新密码不一致！")
+        return attrs
+

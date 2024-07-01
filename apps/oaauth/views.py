@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import LoginSerializer, UserSerializer
+from .serializers import LoginSerializer, UserSerializer, ResetPwdSerializer
 from datetime import datetime
 from .authentications import generate_jwt
 from rest_framework.response import Response
@@ -28,6 +28,7 @@ class LoginView(APIView):
 
 
 class ResetPassword(APIView):
+    # 继承拦截器 独立写法
     # class ResetPassword(APIView, AuthenticatedRequiredView):
 
     # 这里的request是drf封装的 rest_framework.request.Request
@@ -36,4 +37,13 @@ class ResetPassword(APIView):
     def post(self, request):
         print(request  )
         print(request.user)
-        return Response({"msg": "success"})
+        serializer =  ResetPwdSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            pwd1 = serializer.validated_data.get('pwd1')
+            request.user.set_password(pwd1)
+            request.user.save()
+            return Response({'msg':'密码修改成功'})
+        else:
+            print(serializer.errors)
+            detail = list(serializer.errors.values())[0][0]
+            return Response({'detail': detail}, status=status.HTTP_400_BAD_REQUEST)
